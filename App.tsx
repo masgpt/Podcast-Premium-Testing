@@ -1,11 +1,12 @@
 
-import React, { useState, useCallback } from 'react';
-import { Podcast } from './types';
-import { PODCASTS, COLORS } from './constants';
-import { PlayIcon, SearchIcon, UserIcon } from './components/Icons';
-import AudioPlayer from './components/AudioPlayer';
-import { getAiRecommendation } from './services/geminiService';
+import React, { useState } from 'react';
+import { Podcast } from './types.ts';
+import { PODCASTS } from './constants.tsx';
+import { PlayIcon, PauseIcon, SearchIcon, UserIcon } from './components/Icons.tsx';
+import AudioPlayer from './components/AudioPlayer.tsx';
+import { getAiRecommendation } from './services/geminiService.ts';
 
+// Main Application component for the Podcast Hub
 const App: React.FC = () => {
   const [currentPodcast, setCurrentPodcast] = useState<Podcast | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -26,9 +27,14 @@ const App: React.FC = () => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
     setIsLoadingRec(true);
-    const rec = await getAiRecommendation(searchQuery);
-    setRecommendation(rec);
-    setIsLoadingRec(false);
+    try {
+      const rec = await getAiRecommendation(searchQuery);
+      setRecommendation(rec);
+    } catch (err) {
+      setRecommendation("I'm sorry, I couldn't get a recommendation right now.");
+    } finally {
+      setIsLoadingRec(false);
+    }
   };
 
   return (
@@ -42,8 +48,8 @@ const App: React.FC = () => {
           <div className="size-6 text-[#5b13ec]">
             <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path
-                fill-rule="evenodd"
-                clip-rule="evenodd"
+                fillRule="evenodd"
+                clipRule="evenodd"
                 d="M12.0799 24L4 19.2479L9.95537 8.75216L18.04 13.4961L18.0446 4H29.9554L29.96 13.4961L38.0446 8.75216L44 19.2479L35.92 24L44 28.7521L38.0446 39.2479L29.96 34.5039L29.9554 44H18.0446L18.04 34.5039L9.95537 39.2479L4 28.7521L12.0799 24Z"
                 fill="currentColor"
               ></path>
@@ -108,95 +114,69 @@ const App: React.FC = () => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="e.g. 'Future of work' or 'Cooking healthy'"
-                  className="flex-1 bg-[#131118] border-[#453c55] rounded-xl text-white focus:ring-[#5b13ec] focus:border-[#5b13ec]"
+                  className="flex-1 bg-[#131118] border-[#453c55] rounded-xl text-white focus:ring-[#5b13ec] focus:border-[#5b13ec] h-10 px-4 outline-none"
                 />
                 <button 
+                  type="submit"
                   disabled={isLoadingRec}
-                  className="px-6 py-2 bg-[#5b13ec] rounded-xl font-bold hover:bg-[#4d0fd0] disabled:opacity-50 transition-colors"
+                  className="h-10 px-6 bg-[#5b13ec] hover:bg-[#4d0fd0] text-white rounded-xl font-bold transition-all disabled:opacity-50"
                 >
-                  {isLoadingRec ? 'Scouting...' : 'Ask Scout'}
+                  {isLoadingRec ? 'Scouting...' : 'Ask AI'}
                 </button>
               </form>
+              {recommendation && (
+                <div className="bg-[#131118] p-4 rounded-xl border border-[#453c55] animate-in fade-in slide-in-from-top-2 duration-300">
+                  <p className="text-white text-sm italic">"{recommendation}"</p>
+                </div>
+              )}
             </div>
-            {recommendation && (
-              <div className="flex-1 bg-[#131118]/50 p-6 rounded-xl border border-[#5b13ec]/30 animate-in fade-in slide-in-from-right-4 duration-500">
-                <p className="text-sm italic text-[#5b13ec] mb-2">Recommendation for you:</p>
-                <p className="text-white leading-relaxed">{recommendation}</p>
-              </div>
-            )}
           </section>
 
-          {/* Featured Podcasts List */}
+          {/* Podcast Grid */}
           <section className="space-y-6">
-            <h2 className="text-2xl font-bold tracking-tight">Featured Episodes</h2>
-            <div className="grid grid-cols-1 gap-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold">Featured Podcasts</h2>
+              <button className="text-[#5b13ec] font-bold text-sm hover:underline">View All</button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {PODCASTS.map((podcast) => (
                 <div 
                   key={podcast.id}
-                  className="bg-[#2e2839] rounded-2xl p-6 flex flex-col lg:flex-row gap-8 hover:bg-[#383146] transition-colors border border-transparent hover:border-[#453c55]"
+                  className="group bg-[#2e2839] rounded-2xl overflow-hidden border border-transparent hover:border-[#453c55] transition-all cursor-pointer"
+                  onClick={() => handlePlayPodcast(podcast)}
                 >
-                  <div className="flex flex-[2_2_0px] flex-col justify-between py-2">
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <span className="px-2.5 py-1 bg-[#131118] text-[#5b13ec] text-[10px] font-black uppercase tracking-wider rounded-md">
-                          {podcast.category}
-                        </span>
-                        <span className="text-xs text-[#a69db9]">• {podcast.duration}</span>
+                  <div className="relative aspect-video">
+                    <img 
+                      src={podcast.imageUrl} 
+                      alt={podcast.title} 
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <div className="w-12 h-12 bg-[#5b13ec] rounded-full flex items-center justify-center text-white transform scale-90 group-hover:scale-100 transition-transform">
+                        {currentPodcast?.id === podcast.id && isPlaying ? <PauseIcon size={24} /> : <PlayIcon size={24} fill />}
                       </div>
-                      <h3 className="text-2xl font-bold text-white leading-tight">{podcast.title}</h3>
-                      <p className="text-[#a69db9] leading-relaxed line-clamp-2">
-                        {podcast.description}
-                      </p>
                     </div>
-                    <button
-                      onClick={() => handlePlayPodcast(podcast)}
-                      className="mt-6 flex items-center gap-2 px-6 py-2.5 bg-[#131118] text-white rounded-xl font-bold w-fit hover:bg-white hover:text-[#131118] transition-all group"
-                    >
-                      <PlayIcon size={18} fill={currentPodcast?.id === podcast.id && isPlaying} />
-                      <span>{currentPodcast?.id === podcast.id && isPlaying ? 'Playing' : 'Listen Now'}</span>
-                    </button>
                   </div>
-                  <div 
-                    className="w-full lg:w-[400px] h-[225px] bg-center bg-cover rounded-xl shadow-xl transform group-hover:scale-[1.02] transition-transform"
-                    style={{ backgroundImage: `url(${podcast.imageUrl})` }}
-                  />
+                  <div className="p-4 space-y-1">
+                    <p className="text-[#5b13ec] text-xs font-bold uppercase tracking-wider">{podcast.category}</p>
+                    <h3 className="text-white font-bold truncate">{podcast.title}</h3>
+                    <p className="text-[#a69db9] text-xs truncate">{podcast.host}</p>
+                  </div>
                 </div>
               ))}
             </div>
           </section>
-
-          {/* Horizontal mini tiles */}
-          <section className="space-y-6">
-             <h2 className="text-2xl font-bold tracking-tight">More to Discover</h2>
-             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {PODCASTS.map((p) => (
-                  <div key={`mini-${p.id}`} className="bg-[#2e2839] p-4 rounded-xl flex items-center gap-4 hover:translate-y-[-2px] transition-transform cursor-pointer group">
-                    <img src={p.imageUrl} alt={p.title} className="size-16 rounded-lg object-cover" />
-                    <div className="flex-1 overflow-hidden">
-                      <p className="font-bold truncate text-sm">{p.title}</p>
-                      <p className="text-xs text-[#a69db9] truncate">{p.host}</p>
-                    </div>
-                    <button 
-                      onClick={() => handlePlayPodcast(p)}
-                      className="size-10 rounded-full bg-[#5b13ec] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <PlayIcon size={16} fill />
-                    </button>
-                  </div>
-                ))}
-             </div>
-          </section>
         </div>
       </main>
 
-      {/* Persistent Audio Player */}
       <AudioPlayer 
         podcast={currentPodcast} 
         isPlaying={isPlaying} 
-        onTogglePlay={() => setIsPlaying(!isPlaying)}
+        onTogglePlay={() => setIsPlaying(!isPlaying)} 
       />
     </div>
   );
 };
 
+// Add the missing default export to fix the error in index.tsx
 export default App;
