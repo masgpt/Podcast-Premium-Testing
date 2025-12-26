@@ -5,16 +5,29 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Podcast Hub Premium</title>
+    <!-- Tailwind and Fonts -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700;900&family=Noto+Sans:wght@400;500;700;900&display=swap" rel="stylesheet" />
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
     
+    <style>
+      body { font-family: 'Be Vietnam Pro', sans-serif; }
+      ::-webkit-scrollbar { width: 8px; }
+      ::-webkit-scrollbar-track { background: #131118; }
+      ::-webkit-scrollbar-thumb { background: #2e2839; border-radius: 10px; }
+      ::-webkit-scrollbar-thumb:hover { background: #453c55; }
+    </style>
+
+    <!-- Global Shim for API Keys and Environment -->
     <script>
-      // Global process shim for browser environments
-      window.process = { env: { NODE_ENV: 'production', API_KEY: "" } };
+      window.process = { env: { API_KEY: "" } };
     </script>
 
+    <!-- Babel for on-the-fly TSX transpilation (Fixes the Blank Screen on GH Pages) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Import Map for ESM Modules -->
     <script type="importmap">
 {
   "imports": {
@@ -28,9 +41,10 @@
 }
 </script>
   </head>
-  <body class="bg-[#131118] text-white">
+  <body class="bg-[#131118] text-[#a69db9] overflow-hidden">
     <div id="root"></div>
-    <!-- Load the application as an ES module -->
-    <script type="module" src="index.tsx"></script>
+    
+    <!-- We load as 'text/babel' so Babel compiles it for the browser -->
+    <script type="text/babel" data-type="module" src="index.tsx"></script>
   </body>
 </html>
